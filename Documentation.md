@@ -29,3 +29,84 @@ const SidebarItem: FC<SidebarItemProps> = ({ icon:Icon}) => {
     </Link>
   )
 ``
+
+# Redux-Toolkit nextjs
+
+1. first define slice: 
+redux/ slice/ themeSlice.ts
+```typescript
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+type InitialState = {
+  theme: string
+}
+const initialState: InitialState = { theme: 'light' }
+const themeSlice = createSlice({
+  name: 'theme',
+  initialState,
+  reducers: {
+    toggleTheme(state) {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark'
+      console.log(state.theme)
+    },
+  },
+})
+
+export const { toggleTheme } = themeSlice.actions
+export const themeReducer = themeSlice.reducer
+```
+
+2. define store 
+``` typescript
+import { configureStore } from '@reduxjs/toolkit'
+import { themeReducer } from './slices/themeSlice'
+import { useSelector, TypedUseSelectorHook } from 'react-redux'
+export const store = configureStore({
+  reducer: {
+    themeReducer,
+  },
+})
+
+export type RootState = ReturnType<typeof store.getState>
+export type AppDispatch = typeof store.dispatch
+
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
+
+```
+
+3. define provider
+  redux/ providers.tsx
+  ```Typescript
+  'use client'
+import { Provider } from 'react-redux'
+import { store } from './store'
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <Provider store={store}>{children}</Provider>
+}
+
+  ```
+
+  4. wrap the app
+  layout.tsx
+
+  ```typescript
+  <Providers>{children}</Providers>
+  ```
+
+  5. use iT!
+  ```typescript
+  'use client'
+
+import { useAppSelector } from '@/redux/store'
+
+ import { toggleTheme } from '@/redux/slices/themeSlice'
+import { AppDispatch } from '@/redux/store'
+ import { useDispatch } from 'react-redux'
+
+export default function Home() {
+   const dispatch = useDispatch<AppDispatch>()
+  const theme = useAppSelector((state) => state.themeReducer.theme)
+  return <div className="text-green-500 " onClick={()=>dispatch(toggleTheme)} >{theme}</div>
+}
+
+  ```

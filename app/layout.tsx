@@ -1,4 +1,4 @@
-import Sidebar from '@/components/Sidebar'
+import { Providers } from '@/redux/Providers'
 import './globals.css'
 import localFont from 'next/font/local'
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="fa-IR" dir="rtl">
       <body>
-        <Sidebar>{children}</Sidebar>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
