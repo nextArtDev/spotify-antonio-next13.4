@@ -354,3 +354,213 @@ export default AuthProvider
 ```
 
 and then wrap our _layout_ with that.
+
+## creating signin and signup buttons
+
+we create sign in button in: _components/SigninButton.tsx_
+
+```typescript
+'use client'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import React from 'react'
+
+const SigninButton = () => {
+  //we access to the session of the next auth, its 'data' but we rename it to 'session'
+  const { data: session } = useSession()
+  console.log(session?.user)
+
+  if (session && session.user) {
+    return (
+      <div className="flex gap-4 ml-auto">
+        <p className="text-sky-600">{session.user.name}</p>
+        {/* signOut is come from next-auth */}
+        <button onClick={() => signOut()} className="text-red-600 ">
+          Sign Out
+        </button>
+      </div>
+    )
+  }
+  {
+    /* signIn is come from next-auth, 
+    Important: it would redirect us to the sign in form created by next-auth, that we can create it Our selves too! we should create:costume sign in page!
+    */
+  }
+  return (
+    <button onClick={() => signIn()} className="text-green-600 ml-auto">
+      Sign In
+    </button>
+  )
+}
+
+export default SigninButton
+
+```
+## JWT 
+the session of the next-auth can be kept in 2 ways, we can we can keep it in _DataBase_ or keep it in jwt and kept in http-only-cookie (the default). it should be session:{strategy:{}} we can add maxAge too, the default one is 30days.
+But if we want to have this strategy, **we have to have NEXTAUTH_SECRET in our .env file** and also in order to next auth work correctly in production we should add NEXTAUTH_URL 
+### NEXTAUTH_SECRET 
+its neccessary for jwt default strategy, and it should be a complex string
+
+### NEXTAUTH_URL
+In order to next-auth work correctly in production env we should have it in .env file
+
+# Protect pages with next-auth middleware
+first export { default } from 'next-auth/middleware'
+then, include every page you want!
+export const config = { matcher: ['/userpage/:path*'] }
+
+we create a page: _UserPost/page.tsx_ and we want to protect it:
+inside src and side by side of _app_ we create _middleware.ts_
+
+```javascript
+export { default } from 'next-auth/middleware'
+//it protects _userpage_ page and other inner routes
+export const config = { matcher: ['/userpage/:path*'] }
+
+```
+
+# Protecting _dynamic routes_
+In order to do that we should require the client to have an access token inside the header of its request to this api, but we should create an access token in login api and return that access token to the user to user lig in in our app and if user wants to access to that route he/she should include that token in its request
+
+1. step1: create a JWT access token in login api:
+2. step 2: save the Access token inside the next-auth session
+3. step 3: require the client to have access token in the header of its request
+
+step 1: first we should use library to create token:
+$npm i jsonwebtoken 
+and for ts:
+$npm i --save-dev @types/jsonwebtoken
+
+now we need to functions; first to create and sign jwt token second for verifying that
+  _lib/jwt.ts_
+  ```typescript
+import jwt, { JwtPayload } from 'jsonwebtoken'
+
+interface SignOption {
+  expiresIn?: string | number
+}
+// we dont need to pass it every time we want
+const DEFAULT_SIGN_OPTION: SignOption = {
+  expiresIn: '1h',
+}
+
+export function signJwtAccessToken(
+  //its type is from jsonwebtoken itself
+  payload: JwtPayload,
+  // its expires time
+  options: SignOption = DEFAULT_SIGN_OPTION
+) {
+  const secret_key = process.env.SECRET_KEY
+  const token = jwt.sign(payload, secret_key!, options)
+  return token
+}
+
+export function verifyJwt(token: string) {
+  try {
+    const secret_key = process.env.SECRET_KEY
+    const decoded = jwt.verify(token, secret_key!)
+    return decoded as JwtPayload
+  } catch (error) {
+    console.log(error)
+    return null
+  }
+}
+
+  ```
+
+if the login process was succesful we can crete a access token and return it along with the user object
+
+_app/api/logi/route.ts_
+```typescript
+ if (user && (await bcrypt.compare(body.password, user.password))) {
+    const { password, ...userWithoutPass } = user
+    //create access token by lib jwt fn and pass user to it
+    const accessToken = signJwtAccessToken(userWithoutPass)
+    const result = {
+      ...userWithoutPass,
+      //store access token in result
+      accessToken,
+    }
+    //stringifying (This method is commonly used when sending data between a client and server, as JSON is a lightweight data format that can be easily parsed by both JavaScript and other programming languages. it converts a JavaScript object or value into a JSON string.) user with that password:  name: "John" --> "name":"John"
+
+    //return user wih access token and other properties
+    return new Response(JSON.stringify(result))
+  } else return new Response(JSON.stringify(null))
+```
+
+step 2: we should store that access token in next-auth session
+first we should create types because we dont have access to id and jwt inside session right now : create: lib/types/next-auth.d.ts
+
+```typescript
+import NextAuth from "next-auth";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      accessToken: string;
+    };
+  }
+}
+
+```
+now autocomplete have id and access token but its not inside session if we log session, in order to fix this inside _auth/[...nextauth]/routes.ts_ we should add callback object after array of providers
+
+```typescript
+  //we can have 'session:' and 'pages' (for signIn, signOut and other pages).
+  //these are fns to add access token to user session
+  callbacks: {
+    //first we combine token and user into one object and return from jwt
+    async jwt({ token, user }) {
+      return { ...token, ...user }
+    },
+    // second we populate user with session and token w
+    async session({ session, token }) {
+      session.user = token as any
+      return session
+    },
+  },
+```
+
+step 3: require the client to have access token in the header of its request
+we want to protect dynamic route _user/[id]/route.ts_ which is posts of user:
+
+```typescript
+import { verifyJwt } from '@/lib/jwt'
+import prisma from '@/lib/prisma'
+
+export async function GET(
+  request: Request,
+  { params }: { params: { id: number } }
+) {
+  //first we check if the access token is inside the header of request
+  const accessToken = request.headers.get('authorization')
+  //if access token is not at the header of the request or its not valid:
+  //we define verifyjwt fn ourselves
+  if (!accessToken || !verifyJwt(accessToken)) {
+    return new Response(
+      JSON.stringify({
+        error: 'unauthorized',
+      }),
+      {
+        status: 401,
+      }
+    )
+  }
+  const userPosts = await prisma.post.findMany({
+    where: { userId: '' + params.id },
+    include: {
+      user: {
+        select: {
+          email: true,
+          name: true,
+        },
+      },
+    },
+  })
+
+  return new Response(JSON.stringify(userPosts))
+}
+```

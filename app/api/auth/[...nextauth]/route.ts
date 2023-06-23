@@ -16,9 +16,8 @@ const handler = NextAuth({
         username: {
           label: 'نام کاربری',
           type: 'text',
-          placeholder: 'نام کاربری',
         },
-        password: { label: 'پسورد', type: 'password' },
+        password: { label: 'رمز عبور', type: 'password' },
       },
       //most important part of the credentials provider; it would be called when user fill the sig nin form
       async authorize(credentials, req) {
@@ -55,11 +54,14 @@ const handler = NextAuth({
       },
     }),
   ],
+  //we can have 'session:' and 'pages' (for signIn, signOut and other pages).
+  //these are fns to add access token to user session
   callbacks: {
+    //first we combine token and user into one object and return from jwt
     async jwt({ token, user }) {
       return { ...token, ...user }
     },
-
+    // second we populate user with session and token w
     async session({ session, token }) {
       session.user = token as any
       return session
