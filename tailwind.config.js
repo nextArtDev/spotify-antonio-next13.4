@@ -6,6 +6,7 @@ module.exports = {
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
   ],
   theme: {
     container: {
@@ -20,15 +21,6 @@ module.exports = {
         farsi: ['var(--font-sans)', ...fontFamily.sans],
       },
       colors: {
-        'green-neon': '#1eff05',
-        'red-neon': '#ff0534',
-        'pink-neon': '#f82d97',
-        'magenta-neon': '#c501e2',
-        'blue-neon': '#01c4e7',
-        'yellow-neon': '#ffff2a',
-        black: '#181715',
-        beige: '#f6ebe6',
-        //
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
