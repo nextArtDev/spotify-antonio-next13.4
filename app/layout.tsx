@@ -2,6 +2,7 @@ import { Providers } from '@/redux/Providers'
 import './globals.css'
 import localFont from 'next/font/local'
 import AuthProvider from '@/components/AuthProvider'
+import Footer from '@/components/Footer'
 
 const primaryFont = localFont({
   src: '../public/fonts/IRANSansXV.woff2',
@@ -24,6 +25,7 @@ export default function RootLayout({
         <AuthProvider>
           <Providers>{children}</Providers>
         </AuthProvider>
+        {/* <Footer /> */}
       </body>
     </html>
   )

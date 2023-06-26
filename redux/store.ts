@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { themeReducer } from './slices/themeSlice'
 import { useSelector, TypedUseSelectorHook } from 'react-redux'
+import ratingsReducer from './slices/ratingsSlice'
 export const store = configureStore({
   reducer: {
     themeReducer,
+    ratings: ratingsReducer,
   },
 })
 
