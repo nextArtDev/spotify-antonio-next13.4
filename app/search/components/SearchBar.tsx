@@ -1,12 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProfileForm } from './Form'
 import { ComboboxForm } from './Combobox'
 import { ComboboxDemo } from './ComboboxDemo'
-import { doctorsList, illnessList } from '@/constants'
+import { doctors, illness, special } from '@/constants'
 
 // import SearchManufacturer from './SearchManufacturer'
 
@@ -22,10 +22,26 @@ const SearchButton = ({ otherClasses }: { otherClasses: string }) => (
   </button>
 )
 
+const doctorsOptions = doctors.map((doctor) => ({
+  name: doctor.name,
+  value: doctor.id,
+  // illnessId: doctor.illnessId,
+}))
+
+const illnessOptions = illness.map((illness) => ({
+  name: illness.name,
+  value: illness.id,
+  doctorId: illness.doctorId,
+}))
+const specialOptions = special.map((special) => ({
+  name: special.name,
+  value: special.id,
+  doctorId: special.doctorId,
+}))
 const SearchBar = () => {
   const [manufacturer, setManuFacturer] = useState('')
   const [model, setModel] = useState('')
-
+  const [searchedDoctorsId, setSearchedDoctorsId] = useState<number[]>([])
   const router = useRouter()
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -63,12 +79,34 @@ const SearchBar = () => {
   }
 
   return (
-    <form
-      className="flex items-center justify-start max-sm:flex-col w-full relative max-sm:gap-4 max-w-3xl"
-      onSubmit={handleSearch}
-    >
-      <div className=" max-sm:w-[90%] space-y-2 flex-col md:flex justify-between gap-2 items-center relative">
+    <>
+      <form
+        className="flex items-center justify-start max-sm:flex-col w-full relative max-sm:gap-4 max-w-3xl"
+        onSubmit={handleSearch}
+      >
+        {/* <div className=" max-sm:w-[90%] space-y-2 flex-col md:flex justify-between gap-2 items-center relative"> */}
         <ComboboxDemo
+          options={doctorsOptions}
+          text="نام دکتر"
+          imageSrc="/images/doctor.png"
+          setSearchedDoctorsId={setSearchedDoctorsId}
+          searchedDoctorsId={searchedDoctorsId}
+        />
+        <ComboboxDemo
+          options={illnessOptions}
+          text="عنوان بیماری"
+          imageSrc="/images/disease.png"
+          setSearchedDoctorsId={setSearchedDoctorsId}
+          searchedDoctorsId={searchedDoctorsId}
+        />
+        <ComboboxDemo
+          options={specialOptions}
+          text="تخصص"
+          imageSrc="/images/doctor.png"
+          setSearchedDoctorsId={setSearchedDoctorsId}
+          searchedDoctorsId={searchedDoctorsId}
+        />
+        {/* <ComboboxDemo
           options={illnessList}
           text="عنوان بیماری"
           imageSrc="/images/disease.png"
@@ -78,13 +116,15 @@ const SearchBar = () => {
           text="نام دکتر"
           imageSrc="/images/doctor.png"
         />
+        */}
+
         {/* <SearchManufacturer
           manufacturer={manufacturer}
           setManuFacturer={setManuFacturer}
         /> */}
         {/* <SearchButton otherClasses="sm:hidden" /> */}
-      </div>
-      <div className="flex-1 max-sm:w-full flex justify-start items-center relative">
+        {/* </div> */}
+        {/* <div className="flex-1 max-sm:w-full flex justify-start items-center relative">
         <Image
           src="/model-icon.png"
           width={25}
@@ -101,10 +141,25 @@ const SearchBar = () => {
           className="searchbar__input"
         />
         <SearchButton otherClasses="sm:hidden" />
+      </div> */}
+        {/* <SearchButton otherClasses="max-sm:hidden" /> */}
+      </form>
+      <div className="flex flex-col">
+        {doctors.map((doctor) => {
+          return searchedDoctorsId.map((searchesid) => {
+            if (doctor.id === searchesid) {
+              return (
+                <div className="flex flex-col" key={doctor.id}>
+                  <span>{doctor.id}</span>
+                  <span>{doctor.name}</span>
+                  <span>{doctor.specialty}</span>
+                </div>
+              )
+            }
+          })
+        })}
       </div>
-      <SearchButton otherClasses="max-sm:hidden" />
-    </form>
-    // <ComboboxForm />
+    </>
   )
 }
 
