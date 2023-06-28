@@ -103,7 +103,6 @@ export function TabsDemo() {
         className="absolute -top-20 xs:left-4 sm:left-[9%] md:left-[10%] xl:left-[13%] -z-10 "
       >
         <filter id="blurMe">
-          {' '}
           <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
         </filter>
         <circle ref={refCircle1} cx="60" cy="60" r="25" fill="#CA4F01" />
