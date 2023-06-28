@@ -12,80 +12,82 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Sine, gsap } from 'gsap'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, MutableRefObject } from 'react'
 
 export function TabsDemo() {
   const refContainer = useRef<HTMLDivElement>(null)
   const refCircle1 = useRef<SVGCircleElement>(null)
   const refCircle2 = useRef<SVGCircleElement>(null)
   const refSvg = useRef<SVGSVGElement>(null)
-  const navRef = useRef([])
+  const navRef: MutableRefObject<(HTMLButtonElement | null)[]> = useRef([])
 
   useEffect(() => {
     if (navRef.current) {
       gsap.set(refCircle1.current, { transformOrigin: '50%' })
       gsap.set(refCircle2.current, { transformOrigin: '50%' })
 
-      navRef.current.forEach((link: HTMLButtonElement, index: number) => {
-        link.addEventListener('click', (e: Event) => {
-          let tl1 = gsap.timeline({ paused: true })
-          let tl2 = gsap.timeline({ paused: true, delay: 0.05 })
+      navRef.current.forEach(
+        (link: HTMLButtonElement | null, index: number) => {
+          link?.addEventListener('click', (e: Event) => {
+            let tl1 = gsap.timeline({ paused: true })
+            let tl2 = gsap.timeline({ paused: true, delay: 0.05 })
 
-          tl1.to(refCircle1.current, {
-            x: `${33 * index}vw`,
-            duration: 0.2,
-            ease: Sine.easeInOut,
+            tl1.to(refCircle1.current, {
+              x: `${33 * index}vw`,
+              duration: 0.2,
+              ease: Sine.easeIn,
+            })
+            tl1.to(
+              refCircle1.current,
+              {
+                scale: 1.2,
+                scaleY: 0.8,
+                duration: 0.1,
+                ease: Sine.easeIn,
+              },
+              0
+            )
+            tl1.to(
+              refCircle1.current,
+              {
+                scale: 1,
+                scaleY: 1,
+                duration: 0.1,
+                ease: Sine.easeIn,
+              },
+              0.25
+            )
+            tl2.to(refCircle2.current, {
+              x: `${33 * index}vw`,
+              duration: 0.2,
+              ease: Sine.easeOut,
+            })
+            tl2.to(
+              refCircle2.current,
+              {
+                scale: 1.2,
+                scaleY: 0.8,
+                duration: 0.1,
+                ease: Sine.easeOut,
+              },
+              0
+            )
+            tl2.to(
+              refCircle2.current,
+              {
+                scale: 1,
+                scaleY: 1,
+                duration: 0.1,
+                ease: Sine.easeOut,
+              },
+              0.25
+            )
+            tl1.play()
+            tl2.play()
+            e.preventDefault()
           })
-          tl1.to(
-            refCircle1.current,
-            {
-              scale: 1.2,
-              scaleY: 0.8,
-              duration: 0.1,
-              ease: Sine.easeInOut,
-            },
-            0
-          )
-          tl1.to(
-            refCircle1.current,
-            {
-              scale: 1,
-              scaleY: 1,
-              duration: 0.1,
-              ease: Sine.easeInOut,
-            },
-            0.25
-          )
-          tl2.to(refCircle2.current, {
-            x: `${33 * index}vw`,
-            duration: 0.2,
-            ease: Sine.easeInOut,
-          })
-          tl2.to(
-            refCircle2.current,
-            {
-              scale: 1.2,
-              scaleY: 0.8,
-              duration: 0.1,
-              ease: Sine.easeInOut,
-            },
-            0
-          )
-          tl2.to(
-            refCircle2.current,
-            {
-              scale: 1,
-              scaleY: 1,
-              duration: 0.1,
-              ease: Sine.easeInOut,
-            },
-            0.25
-          )
-          tl1.play()
-          tl2.play()
-          e.preventDefault()
-        })
-      })
+        }
+      )
     }
   }, [])
   return (
@@ -98,7 +100,7 @@ export function TabsDemo() {
         ref={refSvg}
         width="100%"
         height="120"
-        className="absolute -top-20 left-[5%] md:left-[12%] -z-10 "
+        className="absolute -top-20 xs:left-4 sm:left-[9%] md:left-[10%] xl:left-[13%] -z-10 "
       >
         <filter id="blurMe">
           {' '}
